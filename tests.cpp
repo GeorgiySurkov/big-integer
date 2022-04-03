@@ -190,6 +190,21 @@ TEST(correctness, operator_subeq_return_value)
     (a -= b) -= b;
     EXPECT_EQ(3, a);
 }
+
+TEST(correctness, operations_with_different_signs)
+{
+    BigInteger a = 7;
+    BigInteger b = 5;
+
+    EXPECT_EQ(12, a + b);
+    EXPECT_EQ(2, a + (-b));
+    EXPECT_EQ(2, a - b);
+    EXPECT_EQ(12, a - (-b));
+    EXPECT_EQ(-2, -a + b);
+    EXPECT_EQ(-12, -a + (-b));
+    EXPECT_EQ(-12, -a - b);
+    EXPECT_EQ(-2, -a - (-b));
+}
 /*
 TEST(correctness, operator_mul)
 {
