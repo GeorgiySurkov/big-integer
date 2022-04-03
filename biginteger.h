@@ -204,6 +204,10 @@ private:
     //--------------------------------
     // Private methods
     //--------------------------------
+    BigInteger &add_number_with_same_sign(const BigInteger &b);
+
+    BigInteger &subtract_lesser_number_with_same_sign(const BigInteger &b);
+
     void check_zero_sign();
 
     void remove_high_order_zeros();

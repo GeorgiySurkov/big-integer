@@ -7,10 +7,15 @@ BigInteger &BigInteger::operator+=(const BigInteger &b) {
     } else if (!m_is_positive && b.m_is_positive) {
         m_is_positive = true;
         this->operator-=(b);
-        m_is_positive = false;
+        m_is_positive = !m_is_positive;
+        check_zero_sign();
         return *this;
     }
 
+    return add_number_with_same_sign(b);
+}
+
+BigInteger &BigInteger::add_number_with_same_sign(const BigInteger &b) {
     // Make sure we have enough space to sum carry
     m_digits.reserve(max(m_digits.size(), b.m_digits.size()) + 1);
     m_digits.push_back(0);
@@ -31,20 +36,24 @@ BigInteger &BigInteger::operator+=(const BigInteger &b) {
 
 BigInteger &BigInteger::operator-=(const BigInteger &b) {
     // Handle different signs and check that abs(*this) is not less than abs(b)
-    if (m_is_positive && !b.m_is_positive) {
-        return this->operator+=(b);
-    } else if (!m_is_positive && b.m_is_positive) {
-        m_is_positive = true;
-        this->operator+=(b);
-        m_is_positive = false;
-        return *this;
+    if (m_is_positive == !b.m_is_positive) {
+        return add_number_with_same_sign(b);
     } else if ((m_is_positive && *this < b) || (!m_is_positive && *this > b)) {
+
+        // swap *this and b
         auto temp = b;
-        temp.operator-=(*this);
-        *this = std::move(-temp);
+        temp.subtract_lesser_number_with_same_sign(*this);
+        temp.m_is_positive = !temp.m_is_positive;
+        temp.check_zero_sign();
+
+        *this = std::move(temp);
         return *this;
     }
 
+    return subtract_lesser_number_with_same_sign(b);
+}
+
+BigInteger &BigInteger::subtract_lesser_number_with_same_sign(const BigInteger &b) {
     // Subtract digits
     size_t digits_to_subtruct = min(m_digits.size(), b.m_digits.size());
     for (int i = 0; i < digits_to_subtruct; ++i) {
@@ -100,7 +109,7 @@ bool operator<(const BigInteger &a, const BigInteger &b) {
 
 void BigInteger::check_zero_sign() {
     // Make sure zero is always positive
-    if (m_digits.size() == 1 && m_digits[0] == 0) m_is_positive = true;
+    if (m_digits.size() == 1 && m_digits.back() == 0) m_is_positive = true;
 }
 
 void BigInteger::remove_high_order_zeros() {
