@@ -52,7 +52,7 @@ TEST(correctness, copy_constructor_real_copy_2)
     EXPECT_EQ(3, x);
 }
 
-/*
+
 TEST(correctness, constructor_invalid_string)
 {
     EXPECT_THROW(BigInteger("abc"), std::invalid_argument);
@@ -64,7 +64,7 @@ TEST(correctness, constructor_invalid_string)
     EXPECT_THROW(BigInteger("--5"), std::invalid_argument);
     EXPECT_THROW(BigInteger("++5"), std::invalid_argument);
 }
-*/
+
 TEST(correctness, assignment_operator)
 {
     BigInteger a = 4;
@@ -205,7 +205,7 @@ TEST(correctness, operations_with_different_signs)
     EXPECT_EQ(-12, -a - b);
     EXPECT_EQ(-2, -a - (-b));
 }
-/*
+
 TEST(correctness, operator_mul)
 {
     BigInteger a = 5;
@@ -677,4 +677,3 @@ TEST(correctness, converting_ctor3)
     EXPECT_TRUE(a == b);
     EXPECT_TRUE(a == c);
 }
-*/

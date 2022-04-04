@@ -149,3 +149,67 @@ BigInteger::BigInteger(const BigInteger &num) {
     m_digits = num.m_digits;
 }
 
+BigInteger::BigInteger(const std::string &s) {
+    //TODO: implement
+}
+
+BigInteger &BigInteger::operator*=(const BigInteger &b) {
+    //TODO: implement
+    return *this;
+}
+
+BigInteger &BigInteger::operator/=(const BigInteger &b) {
+    //TODO: implement
+    return *this;
+}
+
+BigInteger &BigInteger::operator%=(const BigInteger &b) {
+    //TODO: implement
+    return *this;
+}
+
+BigInteger &BigInteger::operator++() {
+    //TODO: implement
+    return *this;
+}
+
+BigInteger &BigInteger::operator--() {
+    //TODO: implement
+    return *this;
+}
+
+BigInteger &BigInteger::operator&=(const BigInteger &b) {
+    //TODO: implement
+    return *this;
+}
+
+BigInteger &BigInteger::operator|=(const BigInteger &b) {
+    //TODO: implement
+    return *this;
+}
+
+BigInteger &BigInteger::operator^=(const BigInteger &b) {
+    //TODO: implement
+    return *this;
+}
+
+BigInteger &BigInteger::operator>>=(const BigInteger &b) {
+    //TODO: implement
+    return *this;
+}
+
+BigInteger &BigInteger::operator<<=(const BigInteger &b) {
+    //TODO: implement
+    return *this;
+}
+
+BigInteger operator~(const BigInteger &a) {
+    //TODO: implement
+    auto copy = a;
+    return copy;
+}
+
+std::string to_string(const BigInteger &num) {
+    return std::to_string(num.m_digits.back());
+}
+

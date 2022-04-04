@@ -65,10 +65,10 @@ public:
             m_digits.push_back(high_order_digit);
         }
     }
-    /*
+
     // constructor from string
     explicit BigInteger(const std::string &s);
-    */
+
     // copy and move constructors
     BigInteger(const BigInteger &num);
 
@@ -96,7 +96,7 @@ public:
         a -= b;
         return a;
     }
-/*
+
     BigInteger &operator*=(const BigInteger &b);
 
     friend BigInteger operator*(BigInteger a, const BigInteger &b) {
@@ -117,12 +117,12 @@ public:
         a /= b;
         return a;
     };
-*/
+
     // unary operators
     friend BigInteger operator-(const BigInteger &a);
 
     friend BigInteger operator+(const BigInteger &a);
-/*
+
     // increment
     BigInteger &operator++();
 
@@ -140,7 +140,7 @@ public:
         operator--();
         return old;
     };
-*/
+
     //--------------------------------
     // Comparison operators
     //--------------------------------
@@ -155,7 +155,7 @@ public:
     friend bool operator==(const BigInteger &a, const BigInteger &b);
 
     friend inline bool operator!=(const BigInteger &a, const BigInteger &b) { return !(a == b); }
-/*
+
     //--------------------------------
     // Bitwise operators
     //--------------------------------
@@ -197,7 +197,6 @@ public:
 
     // unary operators
     friend BigInteger operator~(const BigInteger &a);
-*/
 
 private:
 
@@ -211,12 +210,12 @@ private:
     void check_zero_sign();
 
     void remove_high_order_zeros();
-/*
+
     //--------------------------------
     // Non-member functions
     //--------------------------------
-    friend std::ostream &operator<<(std::ostream &out, const BigInteger &num);
+//    friend std::ostream &operator<<(std::ostream &out, const BigInteger &num);
 
     friend std::string to_string(const BigInteger &num);
-    */
+
 };
