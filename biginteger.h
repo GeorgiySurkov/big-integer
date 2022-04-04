@@ -211,6 +211,8 @@ private:
 
     void remove_high_order_zeros();
 
+    inline void change_sign() { m_is_positive = !m_is_positive; }
+
     //--------------------------------
     // Non-member functions
     //--------------------------------

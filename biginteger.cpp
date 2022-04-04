@@ -5,9 +5,9 @@ BigInteger &BigInteger::operator+=(const BigInteger &b) {
     if (m_is_positive && !b.m_is_positive) {
         return this->operator-=(-b);
     } else if (!m_is_positive && b.m_is_positive) {
-        m_is_positive = true;
+        change_sign();
         this->operator-=(b);
-        m_is_positive = !m_is_positive;
+        change_sign();
         check_zero_sign();
         return *this;
     }
@@ -43,7 +43,7 @@ BigInteger &BigInteger::operator-=(const BigInteger &b) {
         // swap *this and b
         auto temp = b;
         temp.subtract_lesser_number_with_same_sign(*this);
-        temp.m_is_positive = !temp.m_is_positive;
+        temp.change_sign();
         temp.check_zero_sign();
 
         *this = std::move(temp);
@@ -126,7 +126,7 @@ BigInteger operator+(const BigInteger &a) {
 
 BigInteger operator-(const BigInteger &a) {
     BigInteger res = a;
-    res.m_is_positive = !res.m_is_positive;
+    res.change_sign();
     res.check_zero_sign();
     return res;
 }
