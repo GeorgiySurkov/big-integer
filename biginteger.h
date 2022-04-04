@@ -22,48 +22,29 @@ public:
     // Constructors
     //--------------------------------
     // constructors from integer types
-    BigInteger(short num) : m_is_positive(num >= 0), m_digits(1) {
-        num = abs(num);
-        m_digits.push_back(num);
-    }
+    BigInteger(short num) : BigInteger((long long) num) {}
 
-    BigInteger(unsigned short num) : m_is_positive(true), m_digits(1) {
-        m_digits.push_back(num);
-    }
+    BigInteger(unsigned short num) : BigInteger((unsigned long long) num) {}
 
-    BigInteger(int num = 0) : m_is_positive(num >= 0), m_digits(1) {
-        num = abs(num);
-        m_digits.push_back(num);
-    }
+    BigInteger(int num = 0) : BigInteger((long long) num) {}
 
-    BigInteger(unsigned int num) : m_is_positive(true), m_digits(1) {
-        m_digits.push_back(num);
-    }
+    BigInteger(unsigned int num) : BigInteger((unsigned long long) num) {}
 
-    BigInteger(long num) : m_is_positive(num >= 0), m_digits(1) {
-        num = abs(num);
-        m_digits.push_back(num);
-    }
+    BigInteger(long num) : BigInteger((long long) num) {}
 
-    BigInteger(unsigned long num) : m_is_positive(true), m_digits(1) {
-        m_digits.push_back(num);
-    }
+    BigInteger(unsigned long num) : BigInteger((unsigned long long) num) {}
 
     BigInteger(long long num) : m_is_positive(num >= 0), m_digits(2) {
         num = abs(num);
         m_digits.push_back(mod_by_pow_of_2(num, BASE_POW));
-        auto high_order_digit = (long long) div_by_pow_of_2(num, BASE_POW);
-        if (high_order_digit != 0) {
-            m_digits.push_back(high_order_digit);
-        }
+        m_digits.push_back(div_by_pow_of_2(num, BASE_POW));
+        remove_high_order_zeros();
     }
 
     BigInteger(unsigned long long num) : m_is_positive(true), m_digits(2) {
         m_digits.push_back(mod_by_pow_of_2(num, BASE_POW));
-        unsigned long long high_order_digit = div_by_pow_of_2(num, BASE_POW);
-        if (high_order_digit != 0) {
-            m_digits.push_back(high_order_digit);
-        }
+        m_digits.push_back(div_by_pow_of_2(num, BASE_POW));
+        remove_high_order_zeros();
     }
 
     // constructor from string
