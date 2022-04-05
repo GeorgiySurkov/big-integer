@@ -21,11 +21,19 @@ BigInteger &BigInteger::add_number_with_same_sign(const BigInteger &b) {
     m_digits.push_back(0);
 
     // Sum each digit in numbers
-    size_t digits_to_sum = min(m_digits.size(), b.m_digits.size());
-    for (size_t i = 0; i < digits_to_sum; ++i) {
-        int64_t digit = m_digits[i] + b.m_digits[i];
-        m_digits[i] = mod_by_pow_of_2(digit, BASE_POW);
-        m_digits[i + 1] = div_by_pow_of_2(digit, BASE_POW);
+    uint64_t carry = 0;
+    for (size_t i = 0; i < max(m_digits.size(), b.m_digits.size()) || carry != 0; ++i) {
+        if (i == m_digits.size()) {
+            m_digits.push_back(0);
+        }
+        uint64_t digit = (uint64_t) m_digits[i] + (i < b.m_digits.size() ? b.m_digits[i] : 0) + carry;
+        if (digit >= base) {
+            carry = 1;
+            digit -= base;
+        } else {
+            carry = 0;
+        }
+        m_digits[i] = digit;
     }
 
     remove_high_order_zeros();
