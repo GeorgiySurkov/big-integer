@@ -233,6 +233,33 @@ BigInteger::BigInteger(const std::string &s) {
     check_zero_sign();
 }
 
+std::string to_string(const BigInteger &n) {
+    BigInteger num = n; // We create a copy of a number to divide it by 10 for translation;
+    std::string result; // vector for storing result result (they will be stored here in reverse order)
+
+    const uint32_t res_base = 10;
+    while (num.m_digits.size() > 1 || num.m_digits.front() >= res_base) {
+
+        uint64_t carry = 0;
+        for (long i = num.m_digits.size() - 1; i >= 0; --i) {
+            uint64_t cur = num.m_digits[i] + mult_by_pow_of_2(carry, BASE_POW);
+            num.m_digits[i] = cur / 10;
+            carry = cur % 10;
+        }
+
+        num.remove_high_order_zeros();
+
+        result.push_back('0' + (char) carry);
+    }
+    result.push_back('0' + (char) num.m_digits.front());
+
+    if (!n.m_is_positive) {
+        result.push_back('-');
+    }
+
+    return {result.rbegin(), result.rend()};
+}
+
 BigInteger &BigInteger::operator*=(const BigInteger &b) {
     //TODO: implement
     return *this;
@@ -288,8 +315,3 @@ BigInteger operator~(const BigInteger &a) {
     auto copy = a;
     return copy;
 }
-
-std::string to_string(const BigInteger &num) {
-    return std::to_string(num.m_digits.back());
-}
-
