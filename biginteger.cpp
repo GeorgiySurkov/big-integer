@@ -103,7 +103,7 @@ bool operator<(const BigInteger &a, const BigInteger &b) {
     }
 
     // Compare all digits
-    for (size_t i = 0; i < a.m_digits.size(); ++i) {
+    for (long i = a.m_digits.size() - 1; i >= 0; --i) {
         if (a.m_digits[i] > b.m_digits[i]) {
             return !a.m_is_positive;
         } else if (a.m_digits[i] < b.m_digits[i]) {
