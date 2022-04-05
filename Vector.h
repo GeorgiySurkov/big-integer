@@ -119,6 +119,8 @@ public:
 
     const T &back() const { return m_data[m_size - 1]; }
 
+    const T &front() const { return m_data[0]; }
+
     void reserve(size_t new_cap);
 
     T &operator[](unsigned int i) const {

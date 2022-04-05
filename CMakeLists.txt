@@ -23,7 +23,7 @@ add_executable(
         biginteger.h
         Vector.h
         helpers.h
-)
+        helpers.cpp)
 
 add_executable(
         biginteger_test
@@ -32,7 +32,7 @@ add_executable(
         biginteger.h
         Vector.h
         helpers.h
-)
+        helpers.cpp)
 target_link_libraries(
         biginteger_test
         gtest_main

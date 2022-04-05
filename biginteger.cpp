@@ -150,7 +150,57 @@ BigInteger::BigInteger(const BigInteger &num) {
 }
 
 BigInteger::BigInteger(const std::string &s) {
-    //TODO: implement
+    if (s.empty()) {
+        throw std::invalid_argument("string can't be empty");
+    }
+
+    m_is_positive = s[0] != '-';
+
+    // We temporary store number as a big integer with base 10^12
+    const size_t temp_number_size = s.size() - (m_is_positive ? 0 : 1);
+
+    if (temp_number_size == 0) {
+        throw std::invalid_argument("string should have at least 1 digit");
+    }
+
+    constexpr int temp_number_base_pow = 12;
+    constexpr uint64_t temp_number_base = pow((uint64_t) 10, temp_number_base_pow);
+    const char * const temp_number_begin = s.c_str() + (m_is_positive ? 0 : 1);
+    Vector<uint64_t> temp_number(
+            div_with_rounding_up(
+                    temp_number_size,
+                    (size_t) temp_number_base_pow
+            )
+    );
+
+    // parsing str to temp_number
+    for (
+            const char *digit_end = temp_number_begin + temp_number_size;
+            digit_end > temp_number_begin;
+            digit_end -= temp_number_base_pow
+            ) {
+        int digit_size = min(temp_number_base_pow, (int) (digit_end - temp_number_begin));
+        uint64_t res = parse_n_char_str_to_unsigned_int(digit_end - digit_size, digit_size);
+        temp_number.push_back(res);
+    }
+
+    // Translate temp_number to base 2 ^ 32 by dividing until it is less than 2 ^ 32
+    while (temp_number.size() > 1 || temp_number.front() >= base) {
+
+        uint64_t carry = 0;
+        for (long i = temp_number.size() - 1; i >= 0; --i) {
+            uint64_t cur = temp_number[i] + carry * temp_number_base;
+            temp_number[i] = div_by_pow_of_2(cur, BASE_POW);
+            carry = mod_by_pow_of_2(cur, BASE_POW);
+        }
+
+        // remove trailing zeros
+        while (temp_number.size() > 1 && temp_number.back() == 0)
+            temp_number.pop_back();
+
+        m_digits.push_back((uint32_t) carry);
+    }
+    m_digits.push_back((uint32_t) temp_number.front());
 }
 
 BigInteger &BigInteger::operator*=(const BigInteger &b) {
