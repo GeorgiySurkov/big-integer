@@ -163,8 +163,8 @@ BigInteger::BigInteger(const std::string &s) {
         throw std::invalid_argument("string should have at least 1 digit");
     }
 
-    constexpr int temp_number_base_pow = 12;
-    constexpr uint64_t temp_number_base = pow((uint64_t) 10, temp_number_base_pow);
+    const int temp_number_base_pow = 9;
+    const uint64_t temp_number_base = pow((uint64_t) 10, temp_number_base_pow);
     const char * const temp_number_begin = s.c_str() + (m_is_positive ? 0 : 1);
     Vector<uint64_t> temp_number(
             div_with_rounding_up(
@@ -184,23 +184,38 @@ BigInteger::BigInteger(const std::string &s) {
         temp_number.push_back(res);
     }
 
-    // Translate temp_number to base 2 ^ 32 by dividing until it is less than 2 ^ 32
-    while (temp_number.size() > 1 || temp_number.front() >= base) {
+    // Translate temp_number to base 2 ^ 32 by dividing by 2 ^ 16 (otherwise uint64 can overflow) until it is less than 2 ^ 32
+    uint64_t iteration = 0;
+    const int divider_pow = (int) div_by_pow_of_2(BASE_POW, 1);
+    const uint64_t divider = mult_by_pow_of_2(1, divider_pow);
+    while (temp_number.size() > 1 || temp_number.front() >= divider) {
 
         uint64_t carry = 0;
         for (long i = temp_number.size() - 1; i >= 0; --i) {
             uint64_t cur = temp_number[i] + carry * temp_number_base;
-            temp_number[i] = div_by_pow_of_2(cur, BASE_POW);
-            carry = mod_by_pow_of_2(cur, BASE_POW);
+            temp_number[i] = div_by_pow_of_2(cur, divider_pow);
+            carry = mod_by_pow_of_2(cur, divider_pow);
         }
 
         // remove trailing zeros
         while (temp_number.size() > 1 && temp_number.back() == 0)
             temp_number.pop_back();
 
-        m_digits.push_back((uint32_t) carry);
+        if (is_odd(iteration)) {
+            m_digits[m_digits.size() - 1] += mult_by_pow_of_2(carry, BASE_POW / 2);
+        } else {
+            m_digits.push_back((uint32_t) carry);
+        }
+
+        ++iteration;
     }
-    m_digits.push_back((uint32_t) temp_number.front());
+    if (is_odd(iteration)) {
+        m_digits[m_digits.size() - 1] += mult_by_pow_of_2(temp_number.front(), BASE_POW / 2);
+    } else {
+        m_digits.push_back(temp_number.front());
+    }
+
+    check_zero_sign();
 }
 
 BigInteger &BigInteger::operator*=(const BigInteger &b) {

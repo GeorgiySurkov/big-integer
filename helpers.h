@@ -7,16 +7,20 @@ template<typename T>
 inline T abs(T num) {
     return num > 0 ? num : -num;
 }
+
+inline bool is_odd(uint64_t num) {
+    return num & 1; // equal to (num % 2 == 1)
+}
+
 template<typename T>
-constexpr T pow(T base, long long power) {
+T pow(T base, long long power) {
     T result = 1;
     while(power > 0) {
-
-        if(power & 1) { // equal to (power % 2 == 1)
+        if(is_odd(power)) {
             result *= base;
         }
         base *= base;
-        power >>= 1; // equal (to power /= 2)
+        power >>= 1; // equal to (power /= 2)
     }
     return result;
 }
