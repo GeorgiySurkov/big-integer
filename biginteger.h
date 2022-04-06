@@ -81,7 +81,7 @@ public:
     BigInteger &operator*=(const BigInteger &b);
 
     friend BigInteger operator*(BigInteger a, const BigInteger &b) {
-        a -= b;
+        a *= b;
         return a;
     };
 
@@ -188,6 +188,10 @@ private:
 
     BigInteger &subtract_lesser_number_with_same_sign(const BigInteger &b);
 
+public:
+    BigInteger &multiply_by_short_number(uint32_t number);
+
+private:
     void check_zero_sign();
 
     void remove_high_order_zeros();
@@ -197,7 +201,10 @@ private:
     //--------------------------------
     // Non-member functions
     //--------------------------------
-//    friend std::ostream &operator<<(std::ostream &out, const BigInteger &num);
+    friend std::ostream &operator<<(std::ostream &out, const BigInteger &num) {
+        out << to_string(num);
+        return out;
+    };
 
     friend std::string to_string(const BigInteger &num);
 

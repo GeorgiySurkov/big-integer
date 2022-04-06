@@ -27,13 +27,9 @@ BigInteger &BigInteger::add_number_with_same_sign(const BigInteger &b) {
             m_digits.push_back(0);
         }
         uint64_t digit = (uint64_t) m_digits[i] + (i < b.m_digits.size() ? b.m_digits[i] : 0) + carry;
-        if (digit >= base) {
-            carry = 1;
-            digit -= base;
-        } else {
-            carry = 0;
-        }
-        m_digits[i] = digit;
+        m_digits[i] = mod_by_pow_of_2(digit, BASE_POW);
+        carry = div_by_pow_of_2(digit, BASE_POW);
+
     }
 
     remove_high_order_zeros();
@@ -180,7 +176,7 @@ BigInteger::BigInteger(const std::string &s) {
 
     const int temp_number_base_pow = 9;
     const uint64_t temp_number_base = pow((uint64_t) 10, temp_number_base_pow);
-    const char * const temp_number_begin = s.c_str() + (m_is_positive ? 0 : 1);
+    const char *const temp_number_begin = s.c_str() + (m_is_positive ? 0 : 1);
     Vector<uint64_t> temp_number(
             div_with_rounding_up(
                     temp_number_size,
@@ -261,7 +257,35 @@ std::string to_string(const BigInteger &n) {
 }
 
 BigInteger &BigInteger::operator*=(const BigInteger &b) {
-    //TODO: implement
+    if (*this == 0 || b == 0) {
+        *this = 0;
+    }
+
+    BigInteger result;
+    result.m_is_positive = m_is_positive == b.m_is_positive;
+    result.m_digits.reserve(m_digits.size() + b.m_digits.size() + 1);
+    for (size_t i = 1; i < m_digits.size() + b.m_digits.size(); ++i) {
+        result.m_digits.push_back(0);
+    }
+
+    uint64_t digit, carry;
+    for (size_t j = 0; j < b.m_digits.size(); ++j) {
+        if (b.m_digits[j] == 0) {
+            result.m_digits[j + m_digits.size()] = 0;
+        } else {
+            carry = 0;
+            for (size_t k = 0; k < m_digits.size(); ++k) {
+                digit = (uint64_t) m_digits[k] * b.m_digits[j] + (uint64_t) result.m_digits[k + j] + carry;
+                result.m_digits[k + j] = mod_by_pow_of_2(digit, BASE_POW);
+                carry = div_by_pow_of_2(digit, BASE_POW);
+            }
+            result.m_digits[j + m_digits.size()] = (uint32_t) carry;
+        }
+    }
+
+    result.remove_high_order_zeros();
+
+    *this = std::move(result);
     return *this;
 }
 
@@ -314,4 +338,18 @@ BigInteger operator~(const BigInteger &a) {
     //TODO: implement
     auto copy = a;
     return copy;
+}
+
+BigInteger &BigInteger::multiply_by_short_number(uint32_t number) {
+    uint64_t carry = 0;
+    for (size_t i = 0; i < m_digits.size(); ++i) {
+        uint64_t digit = m_digits[i] * (uint64_t) number + carry;
+        m_digits[i] = mod_by_pow_of_2(digit, BASE_POW);
+        carry = div_by_pow_of_2(digit, BASE_POW);
+    }
+    if (carry != 0) {
+        m_digits.push_back(carry);
+    }
+
+    return *this;
 }
