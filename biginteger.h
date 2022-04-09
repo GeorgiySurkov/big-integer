@@ -141,14 +141,14 @@ public:
     // Bitwise operators
     //--------------------------------
     // binary operators
-    BigInteger &operator&=(const BigInteger &b);
+    BigInteger &operator&=(BigInteger b);
 
     friend BigInteger operator&(BigInteger a, const BigInteger &b) {
         a &= b;
         return a;
     };
 
-    BigInteger &operator|=(const BigInteger &b);
+    BigInteger &operator|=(BigInteger b);
 
     friend BigInteger operator|(BigInteger a, const BigInteger &b) {
         a |= b;
@@ -191,6 +191,8 @@ private:
     BigInteger &multiply_by_short_number(uint32_t number);
 
     uint32_t divide_by_short_number(uint32_t number);
+
+    void make_twos_complement_form();
 
     void check_zero_sign();
 

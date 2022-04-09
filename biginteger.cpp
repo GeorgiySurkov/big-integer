@@ -370,38 +370,34 @@ BigInteger &BigInteger::operator--() {
     return *this;
 }
 
-BigInteger &BigInteger::operator&=(const BigInteger &b) {
+BigInteger &BigInteger::operator&=(BigInteger b) {
     size_t digits_to_handle = max(m_digits.size(), b.m_digits.size());
     m_digits.resize(digits_to_handle, 0);
-    uint64_t carry = m_is_positive ? 0 : 1, b_carry = b.m_is_positive ? 0 : 1;
+    make_twos_complement_form();
+    b.m_digits.resize(digits_to_handle, 0);
+    b.make_twos_complement_form();
     for (size_t i = 0; i < digits_to_handle; ++i) {
-        uint64_t digit = (m_is_positive) ? m_digits[i] : ((uint64_t) ~m_digits[i]) + carry;
-        carry = div_by_pow_of_2(digit, BASE_POW);
-        uint32_t b_current_digit = (i < b.m_digits.size()) ? b.m_digits[i] : 0;
-        uint64_t b_digit = (b.m_is_positive) ? b_current_digit : ((uint64_t) ~b_current_digit) + b_carry;
-        b_carry = div_by_pow_of_2(b_digit, BASE_POW);
-        m_digits[i] = digit & b_digit;
+        m_digits[i] = m_digits[i] & b.m_digits[i];
     }
     m_is_positive = m_is_positive || b.m_is_positive;
+    make_twos_complement_form();
 
     remove_high_order_zeros();
     check_zero_sign();
     return *this;
 }
 
-BigInteger &BigInteger::operator|=(const BigInteger &b) {
+BigInteger &BigInteger::operator|=(BigInteger b) {
     size_t digits_to_handle = max(m_digits.size(), b.m_digits.size());
     m_digits.resize(digits_to_handle, 0);
-    uint64_t carry = m_is_positive ? 0 : 1, b_carry = b.m_is_positive ? 0 : 1;
+    make_twos_complement_form();
+    b.m_digits.resize(digits_to_handle, 0);
+    b.make_twos_complement_form();
     for (size_t i = 0; i < digits_to_handle; ++i) {
-        uint64_t digit = (m_is_positive) ? m_digits[i] : ((uint64_t) ~m_digits[i]) + carry;
-        carry = div_by_pow_of_2(digit, BASE_POW);
-        uint32_t b_current_digit = (i < b.m_digits.size()) ? b.m_digits[i] : 0;
-        uint64_t b_digit = (b.m_is_positive) ? b_current_digit : ((uint64_t) ~b_current_digit) + b_carry;
-        b_carry = div_by_pow_of_2(b_digit, BASE_POW);
-        m_digits[i] = digit | b_digit;
+        m_digits[i] = m_digits[i] | b.m_digits[i];
     }
     m_is_positive = m_is_positive && b.m_is_positive;
+    make_twos_complement_form();
 
     remove_high_order_zeros();
     check_zero_sign();
@@ -461,4 +457,13 @@ uint32_t BigInteger::divide_by_short_number(uint32_t number) {
     }
     remove_high_order_zeros();
     return carry;
+}
+
+void BigInteger::make_twos_complement_form() {
+    if (!m_is_positive) {
+        for (size_t i = 0; i < m_digits.size(); ++i) {
+            m_digits[i] = ~m_digits[i];
+        }
+        --(*this);
+    }
 }
