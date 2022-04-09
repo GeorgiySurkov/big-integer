@@ -123,6 +123,8 @@ public:
 
     void reserve(size_t new_cap);
 
+    void resize(size_t new_size, T value = T());
+
     T &operator[](unsigned int i) const {
         if (i >= m_size) throw "Out of array's bounds";
         return m_data[i];
@@ -233,4 +235,19 @@ void Vector<T>::reserve(size_t new_cap) {
     delete[] m_data;
     m_data = tmp;
     m_capacity = new_cap;
+}
+
+template<typename T>
+void Vector<T>::resize(size_t new_size, T value) {
+    if (new_size < 0) {
+        throw std::invalid_argument("Size can't be less than zero");
+    }
+    if (new_size > m_capacity) {
+        reserve(new_size);
+        while (m_size < new_size) {
+            push_back(value);
+        }
+    } else {
+        m_size = new_size;
+    }
 }

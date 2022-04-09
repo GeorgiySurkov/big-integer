@@ -85,7 +85,7 @@ public:
         return a;
     };
 
-    BigInteger &operator/=(const BigInteger &b);
+    BigInteger &operator/=(BigInteger b);
 
     friend BigInteger operator/(BigInteger a, const BigInteger &b) {
         a /= b;
@@ -95,7 +95,7 @@ public:
     BigInteger &operator%=(const BigInteger &b);
 
     friend BigInteger operator%(BigInteger a, const BigInteger &b) {
-        a /= b;
+        a %= b;
         return a;
     };
 
@@ -188,10 +188,10 @@ private:
 
     BigInteger &subtract_lesser_number_with_same_sign(const BigInteger &b);
 
-public:
     BigInteger &multiply_by_short_number(uint32_t number);
 
-private:
+    uint32_t divide_by_short_number(uint32_t number);
+
     void check_zero_sign();
 
     void remove_high_order_zeros();

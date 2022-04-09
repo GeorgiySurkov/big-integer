@@ -231,21 +231,12 @@ BigInteger::BigInteger(const std::string &s) {
 
 std::string to_string(const BigInteger &n) {
     BigInteger num = n; // We create a copy of a number to divide it by 10 for translation;
-    std::string result; // vector for storing result result (they will be stored here in reverse order)
+    std::string result; // vector for storing result digits (they will be stored here in reverse order)
 
     const uint32_t res_base = 10;
     while (num.m_digits.size() > 1 || num.m_digits.front() >= res_base) {
-
-        uint64_t carry = 0;
-        for (long i = num.m_digits.size() - 1; i >= 0; --i) {
-            uint64_t cur = num.m_digits[i] + mult_by_pow_of_2(carry, BASE_POW);
-            num.m_digits[i] = cur / 10;
-            carry = cur % 10;
-        }
-
-        num.remove_high_order_zeros();
-
-        result.push_back('0' + (char) carry);
+        uint32_t remainder = num.divide_by_short_number(10);
+        result.push_back('0' + (char) remainder);
     }
     result.push_back('0' + (char) num.m_digits.front());
 
@@ -289,33 +280,131 @@ BigInteger &BigInteger::operator*=(const BigInteger &b) {
     return *this;
 }
 
-BigInteger &BigInteger::operator/=(const BigInteger &b) {
-    //TODO: implement
+BigInteger &BigInteger::operator/=(BigInteger a) {
+    if (a == 0) {
+        throw std::runtime_error("Division by zero.");
+    }
+    if (a == 1) {
+        return *this;
+    }
+    if (a == -1) {
+        change_sign();
+        return *this;
+    }
+    if (a.m_digits.size() == 1) {
+        divide_by_short_number(a.m_digits.back());
+        m_is_positive = m_is_positive == a.m_is_positive;
+        return *this;
+    }
+    size_t cnt = m_digits.size();
+    BigInteger result;
+    result.m_digits.resize(m_digits.size() - a.m_digits.size() + 1);
+    BigInteger copy2 = a;
+    uint64_t d = base / (a.m_digits.back() + 1);
+
+    *this *= d;
+    if (m_digits.size() <= cnt) {
+        m_digits.push_back(0);
+    }
+    copy2 *= d;
+    uint64_t possible_q, possible_r, digit, product;
+    int ost;
+    for (long j = result.m_digits.size() - 1; j >= 0; --j) {
+        const uint64_t divisible =
+                mult_by_pow_of_2(m_digits[j + a.m_digits.size()], BASE_POW) + m_digits[j + a.m_digits.size() - 1];
+        possible_q = divisible / copy2.m_digits[a.m_digits.size() - 1];
+        possible_r = divisible % copy2.m_digits[a.m_digits.size() - 1];
+        do {
+            if (possible_q == base || (possible_q * (copy2.m_digits[a.m_digits.size() - 2]) >
+                                       (mult_by_pow_of_2(possible_r, BASE_POW) +
+                                        m_digits[j + a.m_digits.size() - 2]))) {
+                --possible_q;
+                possible_r += copy2.m_digits[a.m_digits.size() - 1];
+            } else {
+                break;
+            }
+        } while (possible_r < base);
+        ost = 0;
+        digit = 0;
+        for (size_t i = 0; i < a.m_digits.size(); ++i) {
+            product = possible_q * copy2.m_digits[i];
+            digit = m_digits[i + j] - mod_by_pow_of_2(product, BASE_POW) - ost;
+            m_digits[i + j] = digit;
+            ost = (int) (div_by_pow_of_2(product, BASE_POW) - div_by_pow_of_2(digit, BASE_POW));
+        }
+        digit = m_digits[j + a.m_digits.size()] - ost;
+        m_digits[j + a.m_digits.size()] = digit;
+        result.m_digits[j] = possible_q;
+        if (digit < 0) {
+            --result.m_digits[j];
+            ost = 0;
+            for (size_t i = 0; i < a.m_digits.size(); ++i) {
+                digit = m_digits[i + j] + copy2.m_digits[i] + ost;
+                ost = (int) div_by_pow_of_2(digit, BASE_POW);
+                m_digits[i + j] = digit;
+            }
+            m_digits[j + a.m_digits.size()] += ost;
+        }
+    }
+    result.m_is_positive = m_is_positive == a.m_is_positive;
+    result.remove_high_order_zeros();
+    *this = std::move(result);
     return *this;
 }
 
 BigInteger &BigInteger::operator%=(const BigInteger &b) {
-    //TODO: implement
+    // TODO: write more efficient code
+    *this -= (*this / b) * b;
     return *this;
 }
 
 BigInteger &BigInteger::operator++() {
-    //TODO: implement
+    // TODO: write more efficient code
+    *this += 1;
     return *this;
 }
 
 BigInteger &BigInteger::operator--() {
-    //TODO: implement
+    // TODO: write more efficient code
+    *this -= 1;
     return *this;
 }
 
 BigInteger &BigInteger::operator&=(const BigInteger &b) {
-    //TODO: implement
+    size_t digits_to_handle = max(m_digits.size(), b.m_digits.size());
+    m_digits.resize(digits_to_handle, 0);
+    uint64_t carry = m_is_positive ? 0 : 1, b_carry = b.m_is_positive ? 0 : 1;
+    for (size_t i = 0; i < digits_to_handle; ++i) {
+        uint64_t digit = (m_is_positive) ? m_digits[i] : ((uint64_t) ~m_digits[i]) + carry;
+        carry = div_by_pow_of_2(digit, BASE_POW);
+        uint32_t b_current_digit = (i < b.m_digits.size()) ? b.m_digits[i] : 0;
+        uint64_t b_digit = (b.m_is_positive) ? b_current_digit : ((uint64_t) ~b_current_digit) + b_carry;
+        b_carry = div_by_pow_of_2(b_digit, BASE_POW);
+        m_digits[i] = digit & b_digit;
+    }
+    m_is_positive = m_is_positive || b.m_is_positive;
+
+    remove_high_order_zeros();
+    check_zero_sign();
     return *this;
 }
 
 BigInteger &BigInteger::operator|=(const BigInteger &b) {
-    //TODO: implement
+    size_t digits_to_handle = max(m_digits.size(), b.m_digits.size());
+    m_digits.resize(digits_to_handle, 0);
+    uint64_t carry = m_is_positive ? 0 : 1, b_carry = b.m_is_positive ? 0 : 1;
+    for (size_t i = 0; i < digits_to_handle; ++i) {
+        uint64_t digit = (m_is_positive) ? m_digits[i] : ((uint64_t) ~m_digits[i]) + carry;
+        carry = div_by_pow_of_2(digit, BASE_POW);
+        uint32_t b_current_digit = (i < b.m_digits.size()) ? b.m_digits[i] : 0;
+        uint64_t b_digit = (b.m_is_positive) ? b_current_digit : ((uint64_t) ~b_current_digit) + b_carry;
+        b_carry = div_by_pow_of_2(b_digit, BASE_POW);
+        m_digits[i] = digit | b_digit;
+    }
+    m_is_positive = m_is_positive && b.m_is_positive;
+
+    remove_high_order_zeros();
+    check_zero_sign();
     return *this;
 }
 
@@ -352,4 +441,24 @@ BigInteger &BigInteger::multiply_by_short_number(uint32_t number) {
     }
 
     return *this;
+}
+
+uint32_t BigInteger::divide_by_short_number(uint32_t number) {
+    // returns the remainder of the division
+
+    if (number == 0) {
+        throw std::runtime_error("Division by zero");
+    }
+    if (number < 0) {
+        change_sign();
+        number = -number;
+    }
+    uint64_t carry = 0, digit;
+    for (long i = m_digits.size() - 1; i >= 0; --i) {
+        digit = m_digits[i] + mult_by_pow_of_2(carry, BASE_POW);
+        m_digits[i] = digit / number;
+        carry = digit % number;
+    }
+    remove_high_order_zeros();
+    return carry;
 }
