@@ -404,8 +404,20 @@ BigInteger &BigInteger::operator|=(BigInteger b) {
     return *this;
 }
 
-BigInteger &BigInteger::operator^=(const BigInteger &b) {
-    //TODO: implement
+BigInteger &BigInteger::operator^=(BigInteger b) {
+    size_t digits_to_handle = max(m_digits.size(), b.m_digits.size());
+    m_digits.resize(digits_to_handle, 0);
+    make_twos_complement_form();
+    b.m_digits.resize(digits_to_handle, 0);
+    b.make_twos_complement_form();
+    for (size_t i = 0; i < digits_to_handle; ++i) {
+        m_digits[i] = m_digits[i] ^ b.m_digits[i];
+    }
+    m_is_positive = m_is_positive && b.m_is_positive;
+    make_twos_complement_form();
+
+    remove_high_order_zeros();
+    check_zero_sign();
     return *this;
 }
 

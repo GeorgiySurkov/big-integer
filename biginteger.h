@@ -155,7 +155,7 @@ public:
         return a;
     };
 
-    BigInteger &operator^=(const BigInteger &b);
+    BigInteger &operator^=(BigInteger b);
 
     friend BigInteger operator^(BigInteger a, const BigInteger &b) {
         a ^= b;
