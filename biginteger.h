@@ -85,7 +85,7 @@ public:
         return a;
     };
 
-    BigInteger &operator/=(BigInteger b);
+    BigInteger &operator/=(const BigInteger &b);
 
     friend BigInteger operator/(BigInteger a, const BigInteger &b) {
         a /= b;

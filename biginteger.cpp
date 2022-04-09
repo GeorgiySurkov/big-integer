@@ -280,7 +280,7 @@ BigInteger &BigInteger::operator*=(const BigInteger &b) {
     return *this;
 }
 
-BigInteger &BigInteger::operator/=(BigInteger a) {
+BigInteger &BigInteger::operator/=(const BigInteger &a) {
     if (a == 0) {
         throw std::runtime_error("Division by zero.");
     }
