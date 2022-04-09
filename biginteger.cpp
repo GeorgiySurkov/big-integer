@@ -307,8 +307,8 @@ BigInteger &BigInteger::operator/=(const BigInteger &a) {
         m_digits.push_back(0);
     }
     copy2 *= d;
+    int carry;
     uint64_t possible_q, possible_r, digit, product;
-    int ost;
     for (long j = result.m_digits.size() - 1; j >= 0; --j) {
         const uint64_t divisible =
                 mult_by_pow_of_2(m_digits[j + a.m_digits.size()], BASE_POW) + m_digits[j + a.m_digits.size() - 1];
@@ -324,26 +324,25 @@ BigInteger &BigInteger::operator/=(const BigInteger &a) {
                 break;
             }
         } while (possible_r < base);
-        ost = 0;
-        digit = 0;
+        carry = 0;
         for (size_t i = 0; i < a.m_digits.size(); ++i) {
             product = possible_q * copy2.m_digits[i];
-            digit = m_digits[i + j] - mod_by_pow_of_2(product, BASE_POW) - ost;
+            digit = m_digits[i + j] - mod_by_pow_of_2(product, BASE_POW) - carry;
             m_digits[i + j] = digit;
-            ost = (int) (div_by_pow_of_2(product, BASE_POW) - div_by_pow_of_2(digit, BASE_POW));
+            carry = (int) (div_by_pow_of_2(product, BASE_POW) - div_by_pow_of_2(digit, BASE_POW));
         }
-        digit = m_digits[j + a.m_digits.size()] - ost;
+        digit = m_digits[j + a.m_digits.size()] - carry;
         m_digits[j + a.m_digits.size()] = digit;
         result.m_digits[j] = possible_q;
         if (digit < 0) {
             --result.m_digits[j];
-            ost = 0;
+            carry = 0;
             for (size_t i = 0; i < a.m_digits.size(); ++i) {
-                digit = m_digits[i + j] + copy2.m_digits[i] + ost;
-                ost = (int) div_by_pow_of_2(digit, BASE_POW);
+                digit = m_digits[i + j] + copy2.m_digits[i] + carry;
+                carry = (int) div_by_pow_of_2(digit, BASE_POW);
                 m_digits[i + j] = digit;
             }
-            m_digits[j + a.m_digits.size()] += ost;
+            m_digits[j + a.m_digits.size()] += carry;
         }
     }
     result.m_is_positive = m_is_positive == a.m_is_positive;
@@ -367,57 +366,6 @@ BigInteger &BigInteger::operator++() {
 BigInteger &BigInteger::operator--() {
     // TODO: write more efficient code
     *this -= 1;
-    return *this;
-}
-
-BigInteger &BigInteger::operator&=(BigInteger b) {
-    size_t digits_to_handle = max(m_digits.size(), b.m_digits.size());
-    m_digits.resize(digits_to_handle, 0);
-    make_twos_complement_form();
-    b.m_digits.resize(digits_to_handle, 0);
-    b.make_twos_complement_form();
-    for (size_t i = 0; i < digits_to_handle; ++i) {
-        m_digits[i] = m_digits[i] & b.m_digits[i];
-    }
-    m_is_positive = m_is_positive || b.m_is_positive;
-    make_twos_complement_form();
-
-    remove_high_order_zeros();
-    check_zero_sign();
-    return *this;
-}
-
-BigInteger &BigInteger::operator|=(BigInteger b) {
-    size_t digits_to_handle = max(m_digits.size(), b.m_digits.size());
-    m_digits.resize(digits_to_handle, 0);
-    make_twos_complement_form();
-    b.m_digits.resize(digits_to_handle, 0);
-    b.make_twos_complement_form();
-    for (size_t i = 0; i < digits_to_handle; ++i) {
-        m_digits[i] = m_digits[i] | b.m_digits[i];
-    }
-    m_is_positive = m_is_positive && b.m_is_positive;
-    make_twos_complement_form();
-
-    remove_high_order_zeros();
-    check_zero_sign();
-    return *this;
-}
-
-BigInteger &BigInteger::operator^=(BigInteger b) {
-    size_t digits_to_handle = max(m_digits.size(), b.m_digits.size());
-    m_digits.resize(digits_to_handle, 0);
-    make_twos_complement_form();
-    b.m_digits.resize(digits_to_handle, 0);
-    b.make_twos_complement_form();
-    for (size_t i = 0; i < digits_to_handle; ++i) {
-        m_digits[i] = m_digits[i] ^ b.m_digits[i];
-    }
-    m_is_positive = m_is_positive && b.m_is_positive;
-    make_twos_complement_form();
-
-    remove_high_order_zeros();
-    check_zero_sign();
     return *this;
 }
 
@@ -478,4 +426,40 @@ void BigInteger::make_twos_complement_form() {
         }
         --(*this);
     }
+}
+
+BigInteger &BigInteger::bitwise_binary_operator(BigInteger b, char operation) {
+    size_t digits_to_handle = max(m_digits.size(), b.m_digits.size());
+    m_digits.resize(digits_to_handle, 0);
+    make_twos_complement_form();
+    b.m_digits.resize(digits_to_handle, 0);
+    b.make_twos_complement_form();
+
+    switch (operation) {
+        case '&':
+            for (size_t i = 0; i < digits_to_handle; ++i) {
+                m_digits[i] = m_digits[i] & b.m_digits[i];
+            }
+            m_is_positive = m_is_positive || b.m_is_positive;
+            break;
+        case '|':
+            for (size_t i = 0; i < digits_to_handle; ++i) {
+                m_digits[i] = m_digits[i] | b.m_digits[i];
+            }
+            m_is_positive = m_is_positive && b.m_is_positive;
+            break;
+        case '^':
+            for (size_t i = 0; i < digits_to_handle; ++i) {
+                m_digits[i] = m_digits[i] ^ b.m_digits[i];
+            }
+            m_is_positive = m_is_positive == b.m_is_positive;
+            break;
+        default:
+            throw std::invalid_argument("Invalid operation");
+    }
+    make_twos_complement_form();
+
+    remove_high_order_zeros();
+    check_zero_sign();
+    return *this;
 }

@@ -141,40 +141,46 @@ public:
     // Bitwise operators
     //--------------------------------
     // binary operators
-    BigInteger &operator&=(BigInteger b);
+    BigInteger &operator&=(const BigInteger &b) {
+        return bitwise_binary_operator(b, '&');
+    }
 
     friend BigInteger operator&(BigInteger a, const BigInteger &b) {
         a &= b;
         return a;
-    };
+    }
 
-    BigInteger &operator|=(BigInteger b);
+    BigInteger &operator|=(const BigInteger &b) {
+        return bitwise_binary_operator(b, '|');
+    }
 
     friend BigInteger operator|(BigInteger a, const BigInteger &b) {
         a |= b;
         return a;
-    };
+    }
 
-    BigInteger &operator^=(BigInteger b);
+    BigInteger &operator^=(const BigInteger &b) {
+        return bitwise_binary_operator(b, '^');
+    }
 
     friend BigInteger operator^(BigInteger a, const BigInteger &b) {
         a ^= b;
         return a;
-    };
+    }
 
     BigInteger &operator>>=(const BigInteger &b);
 
     friend BigInteger operator>>(BigInteger a, const BigInteger &b) {
         a >>= b;
         return a;
-    };
+    }
 
     BigInteger &operator<<=(const BigInteger &b);
 
     friend BigInteger operator<<(BigInteger a, const BigInteger &b) {
         a <<= b;
         return a;
-    };
+    }
 
     // unary operators
     friend BigInteger operator~(BigInteger a);
@@ -187,6 +193,8 @@ private:
     BigInteger &add_number_with_same_sign(const BigInteger &b);
 
     BigInteger &subtract_lesser_number_with_same_sign(const BigInteger &b);
+
+    BigInteger &bitwise_binary_operator(BigInteger b, char operation);
 
     BigInteger &multiply_by_short_number(uint32_t number);
 
