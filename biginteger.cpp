@@ -423,10 +423,10 @@ BigInteger &BigInteger::operator<<=(const BigInteger &b) {
     return *this;
 }
 
-BigInteger operator~(const BigInteger &a) {
-    //TODO: implement
-    auto copy = a;
-    return copy;
+BigInteger operator~(BigInteger a) {
+    a.change_sign();
+    --a;
+    return a;
 }
 
 BigInteger &BigInteger::multiply_by_short_number(uint32_t number) {

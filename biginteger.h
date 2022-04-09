@@ -177,7 +177,7 @@ public:
     };
 
     // unary operators
-    friend BigInteger operator~(const BigInteger &a);
+    friend BigInteger operator~(BigInteger a);
 
 private:
 
