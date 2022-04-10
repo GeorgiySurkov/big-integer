@@ -16,11 +16,11 @@ inline bool fits_in_size_t(T num) {
 
 template<typename T>
 inline bool is_odd(T num) {
-    return num & 1; // equal to (num % 2 == 1)
+    return (num & 1) == 1; // equal to (num % 2 == 1)
 }
 
-template<typename T>
-T pow(T base, long long power) {
+template<typename T, typename P>
+T pow(T base, P power) {
     T result = 1;
     while(power > 0) {
         if(is_odd(power)) {
