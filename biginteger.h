@@ -206,6 +206,8 @@ private:
 
     void remove_high_order_zeros();
 
+    [[nodiscard]] long long to_long_long() const;
+
     inline void change_sign() { m_is_positive = !m_is_positive; }
 
     //--------------------------------

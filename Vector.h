@@ -31,6 +31,16 @@ public:
         }
     }
 
+    explicit Vector(size_t N, T value) : m_size(N), m_capacity(N), m_data(nullptr) {
+        if (m_capacity > 0) {
+            m_data = new T[m_capacity];
+            if (!m_data) throw "Out of memory";
+        }
+        for (size_t i = 0; i < N; ++i) {
+            m_data[i] = value;
+        }
+    }
+
     // copy and move constructors
     Vector(const Vector &);
     Vector(Vector &&) noexcept;

@@ -2,13 +2,20 @@
 
 #include <cstdint>
 #include <stdexcept>
+#include <limits>
 
 template<typename T>
 inline T abs(T num) {
     return num > 0 ? num : -num;
 }
 
-inline bool is_odd(uint64_t num) {
+template<typename T>
+inline bool fits_in_size_t(T num) {
+    return std::numeric_limits<size_t>::min() <= num && num <= std::numeric_limits<size_t>::max();
+}
+
+template<typename T>
+inline bool is_odd(T num) {
     return num & 1; // equal to (num % 2 == 1)
 }
 

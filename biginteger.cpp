@@ -375,7 +375,32 @@ BigInteger &BigInteger::operator>>=(const BigInteger &b) {
 }
 
 BigInteger &BigInteger::operator<<=(const BigInteger &b) {
-    //TODO: implement
+    if (!b.m_is_positive) {
+        throw std::invalid_argument("Сan't bitshift to a negative number");
+    }
+    long long b_ll = b.to_long_long();
+    if (!fits_in_size_t(b_ll)) {
+        throw std::range_error("Argument is too big for bitshift");
+    }
+    size_t digit_shift = b_ll / BASE_POW;
+    uint32_t rem_shift = b_ll % BASE_POW;
+    Vector<uint32_t> tmp(m_digits.size() + digit_shift + (rem_shift > 0 ? 1 : 0), 0);
+    for (size_t i = 0; i < digit_shift; ++i) {
+        tmp[i] = 0;
+    }
+    uint64_t accum = 0;
+    for (size_t i = digit_shift, j = 0; j < m_digits.size(); ++i, ++j) {
+        accum |= (uint64_t) m_digits[j] << rem_shift;
+        tmp[i] = accum;
+        accum >>= BASE_POW;
+    }
+    if (rem_shift) {
+        tmp[tmp.size() - 1] = accum;
+    }
+    m_digits = std::move(tmp);
+
+    check_zero_sign();
+    remove_high_order_zeros();
     return *this;
 }
 
@@ -387,9 +412,9 @@ BigInteger operator~(BigInteger a) {
 
 BigInteger &BigInteger::multiply_by_short_number(uint32_t number) {
     uint64_t carry = 0;
-    for (size_t i = 0; i < m_digits.size(); ++i) {
-        uint64_t digit = m_digits[i] * (uint64_t) number + carry;
-        m_digits[i] = mod_by_pow_of_2(digit, BASE_POW);
+    for (auto & m_digit : m_digits) {
+        uint64_t digit = m_digit * (uint64_t) number + carry;
+        m_digit = mod_by_pow_of_2(digit, BASE_POW);
         carry = div_by_pow_of_2(digit, BASE_POW);
     }
     if (carry != 0) {
@@ -462,4 +487,16 @@ BigInteger &BigInteger::bitwise_binary_operator(BigInteger b, char operation) {
     remove_high_order_zeros();
     check_zero_sign();
     return *this;
+}
+
+long long BigInteger::to_long_long() const {
+    switch (m_digits.size()) {
+        case 1:
+            return m_digits[0];
+            break;
+        case 2:
+            return ((long long) m_digits[1] << 32) | (long long) m_digits[0];
+        default:
+            throw std::range_error("This BigInteger can't be represented as unsigned long long");
+    }
 }
