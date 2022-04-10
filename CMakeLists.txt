@@ -17,15 +17,6 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_executable(
-        biginteger
-        main.cpp
-        biginteger.cpp
-        biginteger.h
-        Vector.h
-        helpers.h
-        helpers.cpp)
-
-add_executable(
         biginteger_test
         tests.cpp
         biginteger.cpp
