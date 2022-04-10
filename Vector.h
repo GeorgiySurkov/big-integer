@@ -17,9 +17,9 @@ public:
     //--------------------------------
     // Getters
     //--------------------------------
-    [[nodiscard]] unsigned int size() const { return m_size; }
+    [[nodiscard]] size_t size() const { return m_size; }
 
-    [[nodiscard]] unsigned int capacity() const { return m_capacity; }
+    [[nodiscard]] size_t capacity() const { return m_capacity; }
 
     //--------------------------------
     // Constructors and destructor

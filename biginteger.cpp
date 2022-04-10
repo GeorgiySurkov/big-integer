@@ -370,7 +370,43 @@ BigInteger &BigInteger::operator--() {
 }
 
 BigInteger &BigInteger::operator>>=(const BigInteger &b) {
-    //TODO: implement
+    if (!b.m_is_positive) {
+        throw std::invalid_argument("Сan't bitshift to a negative number");
+    }
+    if (!m_is_positive) {
+        *this = ~(*this);
+        *this >>= b;
+        *this = ~(*this);
+        return *this;
+    }
+    if (b == 0) { // TODO: make faster zero checks
+        return *this;
+    }
+    long long b_ll = b.to_long_long();
+    if (!fits_in_size_t(b_ll)) {
+        throw std::range_error("Argument is too big for bitshift");
+    }
+
+    size_t digit_shift = b_ll / BASE_POW;
+    uint32_t rem_shift = b_ll % BASE_POW;
+    long long new_size = m_digits.size() - digit_shift;
+    if (new_size <= 0) {
+        *this = 0;
+        return *this;
+    }
+    Vector<uint32_t> tmp(new_size, 0);
+    size_t shift = BASE_POW - rem_shift, j = digit_shift, i;
+    uint64_t accum = m_digits[j++] >> rem_shift;
+    for (i = 0; j < m_digits.size(); ++i, ++j) {
+        accum |= (uint64_t) m_digits[j] << shift;
+        tmp[i] = accum;
+        accum >>= BASE_POW;
+    }
+    tmp[i] = accum;
+    m_digits = std::move(tmp);
+
+    check_zero_sign();
+    remove_high_order_zeros();
     return *this;
 }
 
@@ -378,16 +414,17 @@ BigInteger &BigInteger::operator<<=(const BigInteger &b) {
     if (!b.m_is_positive) {
         throw std::invalid_argument("Сan't bitshift to a negative number");
     }
+    if (b == 0) {
+        return *this;
+    }
     long long b_ll = b.to_long_long();
     if (!fits_in_size_t(b_ll)) {
         throw std::range_error("Argument is too big for bitshift");
     }
+
     size_t digit_shift = b_ll / BASE_POW;
     uint32_t rem_shift = b_ll % BASE_POW;
     Vector<uint32_t> tmp(m_digits.size() + digit_shift + (rem_shift > 0 ? 1 : 0), 0);
-    for (size_t i = 0; i < digit_shift; ++i) {
-        tmp[i] = 0;
-    }
     uint64_t accum = 0;
     for (size_t i = digit_shift, j = 0; j < m_digits.size(); ++i, ++j) {
         accum |= (uint64_t) m_digits[j] << rem_shift;
