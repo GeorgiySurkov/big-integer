@@ -1,165 +1,5 @@
 #include "biginteger.h"
 
-BigInteger &BigInteger::operator+=(const BigInteger &b) {
-    // Handle different signs
-    if (m_is_positive && !b.m_is_positive) {
-        return this->operator-=(-b);
-    } else if (!m_is_positive && b.m_is_positive) {
-        change_sign();
-        this->operator-=(b);
-        change_sign();
-        check_zero_sign();
-        return *this;
-    }
-
-    return add_number_with_same_sign(b);
-}
-
-BigInteger &BigInteger::add_number_with_same_sign(const BigInteger &b) {
-    // Make sure we have enough space to sum carry
-    m_digits.reserve(max(m_digits.size(), b.m_digits.size()) + 1);
-    m_digits.push_back(0);
-
-    // Sum each digit in numbers
-    uint64_t carry = 0;
-    for (size_t i = 0; i < max(m_digits.size(), b.m_digits.size()) || carry != 0; ++i) {
-        if (i == m_digits.size()) {
-            m_digits.push_back(0);
-        }
-        uint64_t digit = (uint64_t) m_digits[i] + (i < b.m_digits.size() ? b.m_digits[i] : 0) + carry;
-        m_digits[i] = mod_by_pow_of_2(digit, BASE_POW);
-        carry = div_by_pow_of_2(digit, BASE_POW);
-
-    }
-
-    remove_high_order_zeros();
-
-    check_zero_sign();
-    return *this;
-}
-
-BigInteger &BigInteger::operator-=(const BigInteger &b) {
-    // Handle different signs and check that abs(*this) is not less than abs(b)
-    if (m_is_positive == !b.m_is_positive) {
-        return add_number_with_same_sign(b);
-    } else if ((m_is_positive && *this < b) || (!m_is_positive && *this > b)) {
-
-        // swap *this and b
-        auto temp = b;
-        temp.subtract_lesser_number_with_same_sign(*this);
-        temp.change_sign();
-        temp.check_zero_sign();
-
-        *this = std::move(temp);
-        return *this;
-    }
-
-    return subtract_lesser_number_with_same_sign(b);
-}
-
-BigInteger &BigInteger::subtract_lesser_number_with_same_sign(const BigInteger &b) {
-    // Subtract digits
-    int64_t carry = 0;
-    for (size_t i = 0; i < b.m_digits.size() || carry != 0; ++i) {
-        if (i == m_digits.size()) {
-            m_digits.push_back(0);
-        }
-        int64_t digit = (int64_t) m_digits[i] - (carry + (int64_t) (i < b.m_digits.size() ? b.m_digits[i] : 0));
-        if (digit < 0) {
-            carry = 1;
-            digit += base;
-        } else {
-            carry = 0;
-        }
-        m_digits[i] = digit;
-    }
-
-    remove_high_order_zeros();
-
-    check_zero_sign();
-    return *this;
-}
-
-bool operator==(const BigInteger &a, const BigInteger &b) {
-    // If order of numbers or signs differ then they are not equal
-    if (a.m_digits.size() != b.m_digits.size() || a.m_is_positive != b.m_is_positive) return false;
-
-    // Compare all digits until we find different digits
-    for (size_t i = 0; i < a.m_digits.size(); ++i) {
-        if (a.m_digits[i] != b.m_digits[i]) {
-            return false;
-        }
-    }
-
-    // Otherwise, numbers are equal
-    return true;
-}
-
-bool operator<(const BigInteger &a, const BigInteger &b) {
-    // We need to compare all digits only if a and b have same signs and same order.
-    // All other cases are handled here.
-    if (a.m_is_positive != b.m_is_positive) {
-        return b.m_is_positive;
-    }
-    if (a.m_digits.size() != b.m_digits.size()) {
-        return a.m_is_positive ? a.m_digits.size() < b.m_digits.size() : a.m_digits.size() > b.m_digits.size();
-    }
-
-    // Compare all digits
-    for (long i = a.m_digits.size() - 1; i >= 0; --i) {
-        if (a.m_digits[i] > b.m_digits[i]) {
-            return !a.m_is_positive;
-        } else if (a.m_digits[i] < b.m_digits[i]) {
-            return a.m_is_positive;
-        }
-    }
-
-    // Otherwise, numbers are equal
-    return false;
-}
-
-void BigInteger::check_zero_sign() {
-    // Make sure zero is always positive
-    if (is_zero()) m_is_positive = true;
-}
-
-void BigInteger::remove_high_order_zeros() {
-    while (m_digits.size() > 1 && m_digits.back() == 0) {
-        m_digits.pop_back();
-    }
-}
-
-BigInteger operator+(const BigInteger &a) {
-    BigInteger res = a;
-    res.m_is_positive = true;
-    return res;
-}
-
-BigInteger operator-(const BigInteger &a) {
-    BigInteger res = a;
-    res.change_sign();
-    res.check_zero_sign();
-    return res;
-}
-
-BigInteger &BigInteger::operator=(BigInteger &&num) noexcept {
-    if (&num != this) {
-        m_is_positive = num.m_is_positive;
-        m_digits = std::move(num.m_digits);
-    }
-    return *this;
-}
-
-BigInteger::BigInteger(BigInteger &&num) noexcept {
-    m_is_positive = num.m_is_positive;
-    m_digits = std::move(num.m_digits);
-}
-
-BigInteger::BigInteger(const BigInteger &num) {
-    m_is_positive = num.m_is_positive;
-    m_digits = num.m_digits;
-}
-
 BigInteger::BigInteger(const std::string &s) {
     if (s.empty()) {
         throw std::invalid_argument("string can't be empty");
@@ -229,22 +69,56 @@ BigInteger::BigInteger(const std::string &s) {
     check_zero_sign();
 }
 
-std::string to_string(const BigInteger &n) {
-    BigInteger num = n; // We create a copy of a number to divide it by 10 for translation;
-    std::string result; // vector for storing result digits (they will be stored here in reverse order)
+BigInteger::BigInteger(const BigInteger &num) {
+    m_is_positive = num.m_is_positive;
+    m_digits = num.m_digits;
+}
 
-    const uint32_t res_base = 10;
-    while (num.m_digits.size() > 1 || num.m_digits.front() >= res_base) {
-        uint32_t remainder = num.divide_by_short_number(10);
-        result.push_back('0' + (char) remainder);
+BigInteger::BigInteger(BigInteger &&num) noexcept {
+    m_is_positive = num.m_is_positive;
+    m_digits = std::move(num.m_digits);
+}
+
+BigInteger &BigInteger::operator=(BigInteger &&num) noexcept {
+    if (&num != this) {
+        m_is_positive = num.m_is_positive;
+        m_digits = std::move(num.m_digits);
     }
-    result.push_back('0' + (char) num.m_digits.front());
+    return *this;
+}
 
-    if (!n.m_is_positive) {
-        result.push_back('-');
+BigInteger &BigInteger::operator+=(const BigInteger &b) {
+    // Handle different signs
+    if (m_is_positive && !b.m_is_positive) {
+        return this->operator-=(-b);
+    } else if (!m_is_positive && b.m_is_positive) {
+        change_sign();
+        this->operator-=(b);
+        change_sign();
+        check_zero_sign();
+        return *this;
     }
 
-    return {result.rbegin(), result.rend()};
+    return add_number_with_same_sign(b);
+}
+
+BigInteger &BigInteger::operator-=(const BigInteger &b) {
+    // Handle different signs and check that abs(*this) is not less than abs(b)
+    if (m_is_positive == !b.m_is_positive) {
+        return add_number_with_same_sign(b);
+    } else if ((m_is_positive && *this < b) || (!m_is_positive && *this > b)) {
+
+        // swap *this and b
+        auto temp = b;
+        temp.subtract_lesser_number_with_same_sign(*this);
+        temp.change_sign();
+        temp.check_zero_sign();
+
+        *this = std::move(temp);
+        return *this;
+    }
+
+    return subtract_lesser_number_with_same_sign(b);
 }
 
 BigInteger &BigInteger::operator*=(const BigInteger &b) {
@@ -357,6 +231,19 @@ BigInteger &BigInteger::operator%=(const BigInteger &b) {
     return *this;
 }
 
+BigInteger operator+(const BigInteger &a) {
+    BigInteger res = a;
+    res.m_is_positive = true;
+    return res;
+}
+
+BigInteger operator-(const BigInteger &a) {
+    BigInteger res = a;
+    res.change_sign();
+    res.check_zero_sign();
+    return res;
+}
+
 BigInteger &BigInteger::operator++() {
     // TODO: write more efficient code
     *this += 1;
@@ -367,6 +254,44 @@ BigInteger &BigInteger::operator--() {
     // TODO: write more efficient code
     *this -= 1;
     return *this;
+}
+
+bool operator<(const BigInteger &a, const BigInteger &b) {
+    // We need to compare all digits only if a and b have same signs and same order.
+    // All other cases are handled here.
+    if (a.m_is_positive != b.m_is_positive) {
+        return b.m_is_positive;
+    }
+    if (a.m_digits.size() != b.m_digits.size()) {
+        return a.m_is_positive ? a.m_digits.size() < b.m_digits.size() : a.m_digits.size() > b.m_digits.size();
+    }
+
+    // Compare all digits
+    for (long i = a.m_digits.size() - 1; i >= 0; --i) {
+        if (a.m_digits[i] > b.m_digits[i]) {
+            return !a.m_is_positive;
+        } else if (a.m_digits[i] < b.m_digits[i]) {
+            return a.m_is_positive;
+        }
+    }
+
+    // Otherwise, numbers are equal
+    return false;
+}
+
+bool operator==(const BigInteger &a, const BigInteger &b) {
+    // If order of numbers or signs differ then they are not equal
+    if (a.m_digits.size() != b.m_digits.size() || a.m_is_positive != b.m_is_positive) return false;
+
+    // Compare all digits until we find different digits
+    for (size_t i = 0; i < a.m_digits.size(); ++i) {
+        if (a.m_digits[i] != b.m_digits[i]) {
+            return false;
+        }
+    }
+
+    // Otherwise, numbers are equal
+    return true;
 }
 
 BigInteger &BigInteger::operator>>=(const BigInteger &b) {
@@ -447,6 +372,100 @@ BigInteger operator~(BigInteger a) {
     return a;
 }
 
+BigInteger &BigInteger::add_number_with_same_sign(const BigInteger &b) {
+    // Make sure we have enough space to sum carry
+    m_digits.reserve(max(m_digits.size(), b.m_digits.size()) + 1);
+    m_digits.push_back(0);
+
+    // Sum each digit in numbers
+    uint64_t carry = 0;
+    for (size_t i = 0; i < max(m_digits.size(), b.m_digits.size()) || carry != 0; ++i) {
+        if (i == m_digits.size()) {
+            m_digits.push_back(0);
+        }
+        uint64_t digit = (uint64_t) m_digits[i] + (i < b.m_digits.size() ? b.m_digits[i] : 0) + carry;
+        m_digits[i] = mod_by_pow_of_2(digit, BASE_POW);
+        carry = div_by_pow_of_2(digit, BASE_POW);
+
+    }
+
+    remove_high_order_zeros();
+
+    check_zero_sign();
+    return *this;
+}
+
+BigInteger &BigInteger::subtract_lesser_number_with_same_sign(const BigInteger &b) {
+    // Subtract digits
+    int64_t carry = 0;
+    for (size_t i = 0; i < b.m_digits.size() || carry != 0; ++i) {
+        if (i == m_digits.size()) {
+            m_digits.push_back(0);
+        }
+        int64_t digit = (int64_t) m_digits[i] - (carry + (int64_t) (i < b.m_digits.size() ? b.m_digits[i] : 0));
+        if (digit < 0) {
+            carry = 1;
+            digit += base;
+        } else {
+            carry = 0;
+        }
+        m_digits[i] = digit;
+    }
+
+    remove_high_order_zeros();
+
+    check_zero_sign();
+    return *this;
+}
+
+BigInteger &BigInteger::bitwise_binary_operator(BigInteger b, char operation) {
+    size_t digits_to_handle = max(m_digits.size(), b.m_digits.size());
+    m_digits.resize(digits_to_handle, 0);
+    make_twos_complement_form();
+    b.m_digits.resize(digits_to_handle, 0);
+    b.make_twos_complement_form();
+
+    switch (operation) {
+        case '&':
+            for (size_t i = 0; i < digits_to_handle; ++i) {
+                m_digits[i] = m_digits[i] & b.m_digits[i];
+            }
+            m_is_positive = m_is_positive || b.m_is_positive;
+            break;
+        case '|':
+            for (size_t i = 0; i < digits_to_handle; ++i) {
+                m_digits[i] = m_digits[i] | b.m_digits[i];
+            }
+            m_is_positive = m_is_positive && b.m_is_positive;
+            break;
+        case '^':
+            for (size_t i = 0; i < digits_to_handle; ++i) {
+                m_digits[i] = m_digits[i] ^ b.m_digits[i];
+            }
+            m_is_positive = m_is_positive == b.m_is_positive;
+            break;
+        default:
+            throw std::invalid_argument("Invalid operation");
+    }
+    make_twos_complement_form();
+
+    remove_high_order_zeros();
+    check_zero_sign();
+    return *this;
+}
+
+bool BigInteger::is_zero() const {
+    return m_digits.size() == 1 && m_digits.back() == 0;
+}
+
+bool BigInteger::is_one() const {
+    return m_is_positive && m_digits.size() == 1 && m_digits.back() == 1;
+}
+
+bool BigInteger::is_negative_one() const {
+    return !m_is_positive && m_digits.size() == 1 && m_digits.back() == 1;
+}
+
 BigInteger &BigInteger::multiply_by_short_number(uint32_t number) {
     uint64_t carry = 0;
     for (auto & m_digit : m_digits) {
@@ -490,40 +509,15 @@ void BigInteger::make_twos_complement_form() {
     }
 }
 
-BigInteger &BigInteger::bitwise_binary_operator(BigInteger b, char operation) {
-    size_t digits_to_handle = max(m_digits.size(), b.m_digits.size());
-    m_digits.resize(digits_to_handle, 0);
-    make_twos_complement_form();
-    b.m_digits.resize(digits_to_handle, 0);
-    b.make_twos_complement_form();
+void BigInteger::check_zero_sign() {
+    // Make sure zero is always positive
+    if (is_zero()) m_is_positive = true;
+}
 
-    switch (operation) {
-        case '&':
-            for (size_t i = 0; i < digits_to_handle; ++i) {
-                m_digits[i] = m_digits[i] & b.m_digits[i];
-            }
-            m_is_positive = m_is_positive || b.m_is_positive;
-            break;
-        case '|':
-            for (size_t i = 0; i < digits_to_handle; ++i) {
-                m_digits[i] = m_digits[i] | b.m_digits[i];
-            }
-            m_is_positive = m_is_positive && b.m_is_positive;
-            break;
-        case '^':
-            for (size_t i = 0; i < digits_to_handle; ++i) {
-                m_digits[i] = m_digits[i] ^ b.m_digits[i];
-            }
-            m_is_positive = m_is_positive == b.m_is_positive;
-            break;
-        default:
-            throw std::invalid_argument("Invalid operation");
+void BigInteger::remove_high_order_zeros() {
+    while (m_digits.size() > 1 && m_digits.back() == 0) {
+        m_digits.pop_back();
     }
-    make_twos_complement_form();
-
-    remove_high_order_zeros();
-    check_zero_sign();
-    return *this;
 }
 
 long long BigInteger::to_long_long() const {
@@ -538,14 +532,20 @@ long long BigInteger::to_long_long() const {
     }
 }
 
-bool BigInteger::is_negative_one() const {
-    return !m_is_positive && m_digits.size() == 1 && m_digits.back() == 1;
-}
+std::string to_string(const BigInteger &n) {
+    BigInteger num = n; // We create a copy of a number to divide it by 10 for translation;
+    std::string result; // vector for storing result digits (they will be stored here in reverse order)
 
-bool BigInteger::is_zero() const {
-    return m_digits.size() == 1 && m_digits.back() == 0;
-}
+    const uint32_t res_base = 10;
+    while (num.m_digits.size() > 1 || num.m_digits.front() >= res_base) {
+        uint32_t remainder = num.divide_by_short_number(10);
+        result.push_back('0' + (char) remainder);
+    }
+    result.push_back('0' + (char) num.m_digits.front());
 
-bool BigInteger::is_one() const {
-    return m_is_positive && m_digits.size() == 1 && m_digits.back() == 1;
+    if (!n.m_is_positive) {
+        result.push_back('-');
+    }
+
+    return {result.rbegin(), result.rend()};
 }
