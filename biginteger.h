@@ -196,6 +196,12 @@ private:
 
     BigInteger &bitwise_binary_operator(BigInteger b, char operation);
 
+    bool is_zero() const;
+
+    bool is_one() const;
+
+    bool is_negative_one() const;
+
     BigInteger &multiply_by_short_number(uint32_t number);
 
     uint32_t divide_by_short_number(uint32_t number);

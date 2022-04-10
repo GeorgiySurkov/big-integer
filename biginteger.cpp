@@ -120,7 +120,7 @@ bool operator<(const BigInteger &a, const BigInteger &b) {
 
 void BigInteger::check_zero_sign() {
     // Make sure zero is always positive
-    if (m_digits.size() == 1 && m_digits.back() == 0) m_is_positive = true;
+    if (is_zero()) m_is_positive = true;
 }
 
 void BigInteger::remove_high_order_zeros() {
@@ -248,7 +248,7 @@ std::string to_string(const BigInteger &n) {
 }
 
 BigInteger &BigInteger::operator*=(const BigInteger &b) {
-    if (*this == 0 || b == 0) {
+    if (is_zero() || b.is_zero()) {
         *this = 0;
     }
 
@@ -281,13 +281,13 @@ BigInteger &BigInteger::operator*=(const BigInteger &b) {
 }
 
 BigInteger &BigInteger::operator/=(const BigInteger &a) {
-    if (a == 0) {
+    if (a.is_zero()) {
         throw std::runtime_error("Division by zero.");
     }
-    if (a == 1) {
+    if (a.is_one()) {
         return *this;
     }
-    if (a == -1) {
+    if (a.is_negative_one()) {
         change_sign();
         return *this;
     }
@@ -379,7 +379,7 @@ BigInteger &BigInteger::operator>>=(const BigInteger &b) {
         *this = ~(*this);
         return *this;
     }
-    if (b == 0) { // TODO: make faster zero checks
+    if (b.is_zero()) {
         return *this;
     }
     long long b_ll = b.to_long_long();
@@ -414,7 +414,7 @@ BigInteger &BigInteger::operator<<=(const BigInteger &b) {
     if (!b.m_is_positive) {
         throw std::invalid_argument("Сan't bitshift to a negative number");
     }
-    if (b == 0) {
+    if (b.is_zero()) {
         return *this;
     }
     long long b_ll = b.to_long_long();
@@ -536,4 +536,16 @@ long long BigInteger::to_long_long() const {
         default:
             throw std::range_error("This BigInteger can't be represented as unsigned long long");
     }
+}
+
+bool BigInteger::is_negative_one() const {
+    return !m_is_positive && m_digits.size() == 1 && m_digits.back() == 1;
+}
+
+bool BigInteger::is_zero() const {
+    return m_digits.size() == 1 && m_digits.back() == 0;
+}
+
+bool BigInteger::is_one() const {
+    return m_is_positive && m_digits.size() == 1 && m_digits.back() == 1;
 }
